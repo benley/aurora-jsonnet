@@ -1,0 +1,20 @@
+{
+   "cluster": "us-east-1",
+   "environment": "devel",
+   "name": "example",
+   "role": "vagrant",
+   "task": {
+      "name": "example",
+      "processes": [
+         {
+            "cmdline": "python -m SimpleHTTPServer {{thermos.ports[http]}}",
+            "name": "demo"
+         }
+      ],
+      "resources": {
+         "cpu": 0.20000000000000001,
+         "disk": 1073741824,
+         "ram": 67108864
+      }
+   }
+}

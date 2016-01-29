@@ -1,0 +1,113 @@
+{
+   "jobs": [
+      {
+         "announce": {
+            "portmap": {
+               "health": "admin"
+            },
+            "primary_port": "http"
+         },
+         "cluster": "us-east-1",
+         "constraints": {
+            "host": "limit:1"
+         },
+         "container": {
+            "docker": {
+               "image": "docker.example.com/library/aurproxy:1",
+               "parameters": [ ]
+            }
+         },
+         "environment": "devel",
+         "health_check_config": {
+            "health_checker": {
+               "http": {
+                  "endpoint": "/health",
+                  "expected_response": "ok",
+                  "expected_response_code": 0
+               }
+            },
+            "initial_interval_secs": 30,
+            "interval_secs": 10,
+            "max_consecutive_failures": 0,
+            "timeout_secs": 1
+         },
+         "instances": 2,
+         "name": "aurproxy",
+         "role": "vagrant",
+         "service": true,
+         "task": {
+            "constraints": [
+               {
+                  "order": [
+                     "writefiles",
+                     "aurproxy_setup"
+                  ]
+               },
+               {
+                  "order": [
+                     "aurproxy_setup",
+                     "aurproxy"
+                  ]
+               },
+               {
+                  "order": [
+                     "aurproxy_setup",
+                     "nginx"
+                  ]
+               }
+            ],
+            "name": "aurproxy",
+            "processes": [
+               {
+                  "cmdline": "base64 -d > nginx.conf.template <<__EOF__\neyUtIHNldCBzYW5kYm94ID0gY29udGV4dC5zYW5kYm94IG9yICIvdG1wL25naW54IiAlfQp3b3JrZXJfcHJvY2Vzc2VzIHt7IGNvbnRleHQud29ya2VyX3Byb2Nlc3NlcyBvciAxNiB9fTsKcGlkIHt7IG5naW54X3BpZF9wYXRoIG9yICIvdmFyL3J1bi9uZ2lueC5waWQiIH19OwpkYWVtb24gb2ZmOwoKZXZlbnRzIHsKICB3b3JrZXJfY29ubmVjdGlvbnMge3sgY29udGV4dC53b3JrZXJfY29ubmVjdGlvbnMgb3IgMjAwMCB9fTsKICB1c2UgZXBvbGw7CiAgbXVsdGlfYWNjZXB0IG9uOwp9Cgp3b3JrZXJfcmxpbWl0X25vZmlsZSB7eyBjb250ZXh0Lndvcmtlcl9ybGltaXRfbm9maWxlIG9yIDEwMDAwMCB9fTsKCmVycm9yX2xvZyBzdGRlcnI7Cgp7JS0gaWYgaHR0cF9zZXJ2ZXJzICV9Cmh0dHAgewogICAgY2xpZW50X2JvZHlfdGVtcF9wYXRoIHt7c2FuZGJveH19L2NsaWVudF9ib2R5OwogICAgZmFzdGNnaV90ZW1wX3BhdGggICAgIHt7c2FuZGJveH19L2Zhc3RjZ2lfdGVtcDsKICAgIHByb3h5X3RlbXBfcGF0aCAgICAgICB7e3NhbmRib3h9fS9wcm94eV90ZW1wOwogICAgc2NnaV90ZW1wX3BhdGggICAgICAgIHt7c2FuZGJveH19L3NjZ2lfdGVtcDsKICAgIHV3c2dpX3RlbXBfcGF0aCAgICAgICB7e3NhbmRib3h9fS91d3NnaV90ZW1wOwoKICAgIGluY2x1ZGUgL2V0Yy9uZ2lueC9taW1lLnR5cGVzOwogICAgZGVmYXVsdF90eXBlIGFwcGxpY2F0aW9uL29jdGV0LXN0cmVhbTsKCiAgICBzZW5kZmlsZSBvbjsKICAgIHRjcF9ub3B1c2ggb247CgogICAga2VlcGFsaXZlX3RpbWVvdXQge3sgY29udGV4dC5rZWVwYWxpdmVfdGltZW91dCBvciA2NSB9fTsKICAgIGtlZXBhbGl2ZV9yZXF1ZXN0cyAxMDAwMDA7CiAgICByZXNldF90aW1lZG91dF9jb25uZWN0aW9uIG9uOwogICAgY2xpZW50X2JvZHlfdGltZW91dCAxMDsKICAgIGNsaWVudF9tYXhfYm9keV9zaXplIHt7IGNvbnRleHQuY2xpZW50X21heF9ib2R5X3NpemUgb3IgIjFNIiB9fTsKICAgIHNlbmRfdGltZW91dCAyOwogICAgdGNwX25vZGVsYXkgb247CgogICAgbG9nX2Zvcm1hdCBjb21iaW5lZF9mb3J3YXJkZWRfaXAgJyRyZW1vdGVfYWRkciAoJGh0dHBfeF9mb3J3YXJkZWRfZm9yKSAtICcKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICckcmVtb3RlX3VzZXIgWyR0aW1lX2xvY2FsXSAgJwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgJyIkcmVxdWVzdCIgJHN0YXR1cyAkYm9keV9ieXRlc19zZW50ICcKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICciJGh0dHBfcmVmZXJlciIgIiRodHRwX3VzZXJfYWdlbnQiICcKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICciJGhvc3QiICRyZXF1ZXN0X3RpbWUgJwogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgJyR1cHN0cmVhbV9yZXNwb25zZV90aW1lICcKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICciJHVwc3RyZWFtX2FkZHIiICRtc2VjJzsKCiAgICBhY2Nlc3NfbG9nIC9kZXYvc3Rkb3V0IGNvbWJpbmVkX2ZvcndhcmRlZF9pcDsKICAgIGVycm9yX2xvZyBzdGRlcnI7CgogICAgZ3ppcCBvbjsKCiAgICAjIFN0cmlwIG5naW54IHZlcnNpb24gZnJvbSBoZWFkZXJzICYgZXJyb3IgcGFnZXMKICAgIHNlcnZlcl90b2tlbnMgb2ZmOwogICAgIyBPdmVycmlkZSAiU2VydmVyIiBoZWFkZXIgc28gdGhhdCBzZXJ2ZXIgdHlwZSBkb2Vzbid0IGxlYWsuCiAgICBtb3JlX3NldF9oZWFkZXJzICdTZXJ2ZXI6ICc7CgogICAgIyBTZXQgdXAgY3VzdG9tIGVycm9yIHBhZ2UgZm9yIGFsbCBwb3NzaWJsZSBlcnJvciByZXNwb25zZSBjb2RlcwogICAgIyAoQWxsb3dzIGVsaW1pbmF0aW9uIG9mIHNlcnZlciB0eXBlIGluZm9ybWF0aW9uIGluIGVycm9yIHBhZ2VzKQogICAgIyBGcm9tIGh0dHA6Ly9seHIubmdpbngub3JnL3NvdXJjZS9zcmMvaHR0cC9uZ3hfaHR0cF9zcGVjaWFsX3Jlc3BvbnNlLmMKICAgIGVycm9yX3BhZ2UgNDAwIDQwMSA0MDIgNDAzIDQwNCA0MDUgNDA2IDQwOCA0MDkgNDEwIDQxMSA0MTIgNDEzIDQxNCA0MTUgNDE2IDQ5NCA0OTUgNDk2IDQ5NyA1MDAgNTAxIDUwMiA1MDMgNTA0IDUwNyAvYXVycHJveHlfZXJyb3IuaHRtbDsKCiAgICB7JS0gaWYgc3RhdHNfcG9ydCAlfQogICAgc2VydmVyIHsKICAgICAgICBsaXN0ZW4ge3sgcHJveHlfY29uZmlnLnN0YXRzX3BvcnQgfX07CiAgICAgICAgbG9jYXRpb24gL2F1cnByb3h5X2Vycm9yLmh0bWwgewogICAgICAgICAgICBpbnRlcm5hbDsKICAgICAgICAgICAgZWNobyAiRXJyb3IiOwogICAgICAgIH0KICAgICAgICBsb2NhdGlvbiAvYXVycHJveHkvc3RhdHVzIHsKICAgICAgICAgICAgc3R1Yl9zdGF0dXMgb247CiAgICAgICAgICAgICMgYWNjZXNzX2xvZyBvbjsKICAgICAgICAgICAgYWxsb3cgMTI3LjAuMC4xOwogICAgICAgICAgICBkZW55IGFsbDsKICAgICAgICB9CiAgICB9CiAgICB7JS0gZW5kaWYgJX0KCiAgICB7JS0gZm9yIHNlcnZlciBpbiBodHRwX3NlcnZlcnMgJX0KICAgIHslLSBpZiBzZXJ2ZXIuY29udGV4dC5vdmVyZmxvd19wb3J0ICV9CiAgICBzZXJ2ZXIgewogICAgICAgIGxpc3RlbiB7e3NlcnZlci5jb250ZXh0Lm92ZXJmbG93X3BvcnR9fSBkZWZhdWx0X3NlcnZlcjsKICAgICAgICBsb2NhdGlvbiAvYXVycHJveHlfZXJyb3IuaHRtbCB7CiAgICAgICAgICAgIGludGVybmFsOwogICAgICAgICAgICBlY2hvICJFcnJvciI7CiAgICAgICAgfQogICAgICAgIGxvY2F0aW9uIC8gewogICAgICAgICAgICAjIGFjY2Vzc19sb2cgb247CiAgICAgICAgICAgIHJldHVybiA1MDI7CiAgICAgICAgfQogICAgfQogICAgeyUtIGVuZGlmICV9CgogICAgeyUtIGZvciByb3V0ZSBpbiBzZXJ2ZXIucm91dGVzICV9CiAgICB7JS0gaWYgcm91dGUuZW5kcG9pbnRzICV9CiAgICB1cHN0cmVhbSB7eyBzZXJ2ZXIuc2x1ZyB9fXt7IHJvdXRlLnNsdWcgfX0gewogICAgICAgIGxlYXN0X2Nvbm47CiAgICAgICAgeyUgZm9yIGVuZHBvaW50IGluIHJvdXRlLmVuZHBvaW50cyAlfXslIGlmIG5vdCBlbmRwb2ludC53ZWlnaHQgJX0jeyUgZW5kaWYgJX1zZXJ2ZXIge3sgZW5kcG9pbnQuaG9zdCB9fTp7eyBlbmRwb2ludC5wb3J0IH19IHdlaWdodD17eyBlbmRwb2ludC53ZWlnaHQgfX07ICMge3sgZW5kcG9pbnQuYXVkaXQucmVuZGVyKCkgfX0KICAgICAgICB7JS0gZW5kZm9yICV9CiAgICAgICAga2VlcGFsaXZlIDUxMjsKICAgIH0KICAgIHslLSBlbmRpZiAlfQogICAgeyUtIGVuZGZvciAlfQoKICAgIHNlcnZlciB7CiAgICAgICAgeyUtIGZvciBwb3J0IGluIHNlcnZlci5wb3J0cyAlfQogICAgICAgIGxpc3RlbiB7eyBwb3J0IH19e3snIGRlZmF1bHRfc2VydmVyJyBpZiBzZXJ2ZXIuY29udGV4dC5kZWZhdWx0X3NlcnZlciA9PSBUcnVlIGVsc2UgJyd9fTsKICAgICAgICB7JS0gZW5kZm9yICV9CgogICAgICAgIHNlcnZlcl9uYW1lIHslIGZvciBob3N0IGluIHNlcnZlci5ob3N0cyAlfXt7IGhvc3QgfX17JSBpZiBub3QgbG9vcC5sYXN0JX0geyUgZW5kaWYgJX17JSBlbmRmb3IgJX07CgogICAgICAgIHByb3h5X2Nvbm5lY3RfdGltZW91dCAge3sgc2VydmVyLmNvbnRleHQucHJveHlfY29ubmVjdF90aW1lb3V0IG9yIDYwIH19OwogICAgICAgIHByb3h5X3NlbmRfdGltZW91dCAgICAge3sgc2VydmVyLmNvbnRleHQucHJveHlfc2VuZF90aW1lb3V0ICAgIG9yIDYwIH19OwogICAgICAgIHByb3h5X3JlYWRfdGltZW91dCAgICAge3sgc2VydmVyLmNvbnRleHQucHJveHlfcmVhZF90aW1lb3V0ICAgIG9yIDYwIH19OwogICAgICAgIHNlbmRfdGltZW91dCAgICAgICAgICAge3sgc2VydmVyLmNvbnRleHQuc2VuZF90aW1lb3V0ICAgICAgICAgIG9yIDYwIH19OwoKICAgICAgICBwcm94eV9idWZmZXJfc2l6ZSA2NGs7CiAgICAgICAgcHJveHlfYnVmZmVycyAxNiAxNms7CiAgICAgICAgbGFyZ2VfY2xpZW50X2hlYWRlcl9idWZmZXJzIDggMzJrOwoKICAgICAgICBsb2NhdGlvbiAvYXVycHJveHlfZXJyb3IuaHRtbCB7CiAgICAgICAgICAgIGludGVybmFsOwogICAgICAgICAgICBlY2hvICJFcnJvciI7CiAgICAgICAgfQoKICAgICAgICB7JS0gaWYgc2VydmVyLmhlYWx0aGNoZWNrX3JvdXRlICV9CiAgICAgICAgbG9jYXRpb24ge3sgc2VydmVyLmhlYWx0aGNoZWNrX3JvdXRlIH19IHsKICAgICAgICAgICMgYWNjZXNzX2xvZyBvbjsKICAgICAgICAgIHJldHVybiAyMDA7CiAgICAgICAgfQogICAgICAgIHslLSBlbmRpZiAlfQoKICAgICAgICB7JS0gZm9yIGJsYWNrbGlzdGVkX2xvY2F0aW9uIGluIHNlcnZlci5jb250ZXh0LmxvY2F0aW9uX2JsYWNrbGlzdCAlfQogICAgICAgIGxvY2F0aW9uIHt7YmxhY2tsaXN0ZWRfbG9jYXRpb259fSB7IGRlbnkgYWxsOyB9CiAgICAgICAgeyUtIGVuZGZvciAlfQoKICAgICAgICBwcm94eV9odHRwX3ZlcnNpb24gMS4xOwogICAgICAgIHByb3h5X3NldF9oZWFkZXIgIEhvc3QgICAgICAgICAgICAkaG9zdDsKICAgICAgICBwcm94eV9zZXRfaGVhZGVyICBYLVJlYWwtSVAgICAgICAgJHJlbW90ZV9hZGRyOwogICAgICAgIHByb3h5X3NldF9oZWFkZXIgIFgtRm9yd2FyZGVkLUZvciAkcHJveHlfYWRkX3hfZm9yd2FyZGVkX2ZvcjsKICAgICAgICBwcm94eV9zZXRfaGVhZGVyICBDb25uZWN0aW9uICAgICAgIiI7CiAgICAgICAgeyUtIGZvciByb3V0ZSBpbiBzZXJ2ZXIucm91dGVzICV9CiAgICAgICAgeyUgZm9yIGxvY2F0aW9uIGluIHJvdXRlLmxvY2F0aW9ucyAlfQogICAgICAgIGxvY2F0aW9uIHt7bG9jYXRpb259fSB7CiAgICAgICAgICAgIHslLSBpZiByb3V0ZS5lbmRwb2ludHMgJX0KICAgICAgICAgICAgcHJveHlfbmV4dF91cHN0cmVhbSBvZmY7CiAgICAgICAgICAgIHByb3h5X3Bhc3MgaHR0cDovL3t7IHNlcnZlci5zbHVnIH19e3sgcm91dGUuc2x1ZyB9fTsKICAgICAgICAgICAgeyUtIGVsc2UgJX0KICAgICAgICAgICAgIyBObyBlbmRwb2ludHMgZm91bmQgZm9yIHt7IHNlcnZlci5zbHVnIH19e3sgcm91dGUuc2x1ZyB9fQogICAgICAgICAgICAjIGFjY2Vzc19sb2cgb247CiAgICAgICAgICAgIHJldHVybiB7eyByb3V0ZS5lbXB0eV9lbmRwb2ludF9zdGF0dXNfY29kZSB9fTsKICAgICAgICAgICAgeyUtIGVuZGlmICV9CiAgICAgICAgfQogICAgICAgIHslLSBlbmRmb3IgJX0KICAgICAgICB7JS0gZW5kZm9yICV9CiAgICB9CiAgICB7JS0gZW5kZm9yICV9Cn0KeyUtIGVuZGlmICV9Cgp7JS0gaWYgc3RyZWFtX3NlcnZlcnMgJX0Kc3RyZWFtIHsKICAgeyUgZm9yIHNlcnZlciBpbiBzdHJlYW1fc2VydmVycyAlfQogICAgc2VydmVyIHsKICAgICAgICB7JS0gZm9yIHBvcnQgaW4gc2VydmVyLnBvcnRzICV9CiAgICAgICAgbGlzdGVuIHt7IHBvcnQgfX07CiAgICAgICAgeyUtIGVuZGZvciAlfQogICAgICAgIHByb3h5X3Bhc3Mge3sgc2VydmVyLnNsdWcgfX07CiAgICB9CgogICAgdXBzdHJlYW0ge3sgc2VydmVyLnNsdWcgfX0gewogICAgICAgIGxlYXN0X2Nvbm47CiAgICAgICAgeyUtIGZvciBzdHJlYW0gaW4gc2VydmVyLnN0cmVhbXMgJX0KICAgICAgICB7JS0gZm9yIGVuZHBvaW50IGluIHN0cmVhbS5lbmRwb2ludHMgJX0KICAgICAgICB7JSBpZiBub3QgZW5kcG9pbnQud2VpZ2h0ICV9I3slIGVuZGlmICV9c2VydmVyIHt7IGVuZHBvaW50Lmhvc3QgfX06e3sgZW5kcG9pbnQucG9ydCB9fSB3ZWlnaHQ9e3sgZW5kcG9pbnQud2VpZ2h0IH19OyAjIHt7IGVuZHBvaW50LmF1ZGl0LnJlbmRlcigpIH19CiAgICAgICAgeyUtIGVuZGZvciAlfQogICAgICAgIHslLSBlbmRmb3IgJX0KICAgIH0KICAgeyUtIGVuZGZvciAlfQp9CnslLSBlbmRpZiAlfQo=\n__EOF__\n",
+                  "name": "writefiles"
+               },
+               {
+                  "cmdline": "exec aurproxy run --config '{\"backend\": \"nginx\", \"configuration_file\": \"/mnt/mesos/sandbox/sandbox/nginx.conf\", \"context\": {\"sandbox\": \"/mnt/mesos/sandbox/sandbox\"}, \"nginx_pid_path\": \"/mnt/mesos/sandbox/sandbox/nginx.pid\", \"servers\": [{\"context\": {\"default_server\": true}, \"healthcheck_route\": \"/health\", \"hosts\": [\"default\"], \"ports\": [9998, \"{{thermos.ports[http]}}\"], \"routes\": [{\"empty_endpoint_status_code\": 503, \"locations\": [\"/\"], \"overflow_sources\": [ ], \"overflow_threshold_pct\": null, \"sources\": [{\"announcer_serverset_path\": \"/aurora\", \"endpoint\": \"http\", \"environment\": \"test\", \"job\": \"asdf\", \"role\": \"vagrant\", \"source_class\": \"tellapart.aurproxy.source.AuroraProxySource\", \"zk_servers\": \"zk.us-east-1.prod.example.com:2181\"}]}], \"streams\": [ ]}, {\"context\": {\"default_server\": false, \"location_blacklist\": [\"/health\", \"/quitquitquit\", \"/abortabortabort\"]}, \"healthcheck_route\": null, \"hosts\": [\"aurora.us-east-1.prod.example.com\", \"aurora.us-east-1.prod\", \"aurora.us-east-1.prod\"], \"ports\": [9998, \"{{thermos.ports[http]}}\"], \"routes\": [{\"empty_endpoint_status_code\": 503, \"locations\": [\"/\"], \"overflow_sources\": [ ], \"overflow_threshold_pct\": null, \"sources\": [{\"path\": \"/aurora/scheduler\", \"source_class\": \"tellapart.aurproxy.source.ServerSetSource\", \"zk_member_prefix\": \"member\", \"zk_servers\": \"zk.us-east-1.prod.example.com:2181\"}]}], \"streams\": [ ]}, {\"context\": {\"default_server\": false, \"location_blacklist\": [\"/health\", \"/quitquitquit\", \"/abortabortabort\"]}, \"healthcheck_route\": null, \"hosts\": [\"mesos.us-east-1.prod.example.com\", \"mesos.us-east-1.prod\", \"mesos.us-east-1\"], \"ports\": [9998, \"{{thermos.ports[http]}}\"], \"routes\": [{\"empty_endpoint_status_code\": 503, \"locations\": [\"/\"], \"overflow_sources\": [ ], \"overflow_threshold_pct\": null, \"sources\": [{\"mesos_master_path\": \"/mesos-us-east-1\", \"source_class\": \"tellapart.aurproxy.source.MesosMasterProxySource\", \"zk_servers\": \"zk.us-east-1.prod.example.com:2181\"}]}], \"streams\": [ ]}], \"template_file\": \"/mnt/mesos/sandbox/sandbox/nginx.conf.template\"}' --management-port {{thermos.ports[admin]}} --registration-class=tellapart.aurproxy.register.elb.ElbSelfRegisterer --registration-arg='region=us-east-1' --registration-arg='elb_names=example-elb' --registration-arg='access_key=FAKEFAKEFAKEFAKEFAKE' --registration-arg='secret_key=Fakefakefakefakefakefakefakefakefakefake' --setup",
+                  "name": "aurproxy_setup"
+               },
+               {
+                  "cmdline": "exec aurproxy run --config '{\"backend\": \"nginx\", \"configuration_file\": \"/mnt/mesos/sandbox/sandbox/nginx.conf\", \"context\": {\"sandbox\": \"/mnt/mesos/sandbox/sandbox\"}, \"nginx_pid_path\": \"/mnt/mesos/sandbox/sandbox/nginx.pid\", \"servers\": [{\"context\": {\"default_server\": true}, \"healthcheck_route\": \"/health\", \"hosts\": [\"default\"], \"ports\": [9998, \"{{thermos.ports[http]}}\"], \"routes\": [{\"empty_endpoint_status_code\": 503, \"locations\": [\"/\"], \"overflow_sources\": [ ], \"overflow_threshold_pct\": null, \"sources\": [{\"announcer_serverset_path\": \"/aurora\", \"endpoint\": \"http\", \"environment\": \"test\", \"job\": \"asdf\", \"role\": \"vagrant\", \"source_class\": \"tellapart.aurproxy.source.AuroraProxySource\", \"zk_servers\": \"zk.us-east-1.prod.example.com:2181\"}]}], \"streams\": [ ]}, {\"context\": {\"default_server\": false, \"location_blacklist\": [\"/health\", \"/quitquitquit\", \"/abortabortabort\"]}, \"healthcheck_route\": null, \"hosts\": [\"aurora.us-east-1.prod.example.com\", \"aurora.us-east-1.prod\", \"aurora.us-east-1.prod\"], \"ports\": [9998, \"{{thermos.ports[http]}}\"], \"routes\": [{\"empty_endpoint_status_code\": 503, \"locations\": [\"/\"], \"overflow_sources\": [ ], \"overflow_threshold_pct\": null, \"sources\": [{\"path\": \"/aurora/scheduler\", \"source_class\": \"tellapart.aurproxy.source.ServerSetSource\", \"zk_member_prefix\": \"member\", \"zk_servers\": \"zk.us-east-1.prod.example.com:2181\"}]}], \"streams\": [ ]}, {\"context\": {\"default_server\": false, \"location_blacklist\": [\"/health\", \"/quitquitquit\", \"/abortabortabort\"]}, \"healthcheck_route\": null, \"hosts\": [\"mesos.us-east-1.prod.example.com\", \"mesos.us-east-1.prod\", \"mesos.us-east-1\"], \"ports\": [9998, \"{{thermos.ports[http]}}\"], \"routes\": [{\"empty_endpoint_status_code\": 503, \"locations\": [\"/\"], \"overflow_sources\": [ ], \"overflow_threshold_pct\": null, \"sources\": [{\"mesos_master_path\": \"/mesos-us-east-1\", \"source_class\": \"tellapart.aurproxy.source.MesosMasterProxySource\", \"zk_servers\": \"zk.us-east-1.prod.example.com:2181\"}]}], \"streams\": [ ]}], \"template_file\": \"/mnt/mesos/sandbox/sandbox/nginx.conf.template\"}' --management-port {{thermos.ports[admin]}} --registration-class=tellapart.aurproxy.register.elb.ElbSelfRegisterer --registration-arg='region=us-east-1' --registration-arg='elb_names=example-elb' --registration-arg='access_key=FAKEFAKEFAKEFAKEFAKE' --registration-arg='secret_key=Fakefakefakefakefakefakefakefakefakefake'",
+                  "name": "aurproxy"
+               },
+               {
+                  "cmdline": "exec nginx -c $PWD/nginx.conf",
+                  "name": "nginx"
+               }
+            ],
+            "resources": {
+               "cpu": 0.5,
+               "disk": 1073741824,
+               "ram": 268435456
+            }
+         }
+      },
+      {
+         "cluster": "us-east-1",
+         "container": {
+            "docker": {
+               "image": "docker.example.com/library/aurproxy:1",
+               "parameters": [ ]
+            }
+         },
+         "environment": "devel",
+         "name": "aurproxy-sync",
+         "role": "vagrant",
+         "service": false,
+         "task": {
+            "name": "aurproxy_sync",
+            "processes": [
+               {
+                  "cmdline": "exec aurproxy synchronize --registration-source='{\"announcer_serverset_path\": \"/aurora\", \"endpoint\": \"http\", \"environment\": \"devel\", \"job\": \"aurproxy\", \"role\": \"vagrant\", \"source_class\": \"tellapart.aurproxy.source.AuroraProxySource\", \"zk_servers\": \"zk.us-east-1.prod.example.com:2181\"}' --registration-class=tellapart.aurproxy.register.elb.ElbJobRegisterer --registration-arg=region=us-east-1 --registration-arg=elb_names=example-elb --registration-arg=remove_other_instances=true --registration-arg=access_key=FAKEFAKEFAKEFAKEFAKE --registration-arg=secret_key=Fakefakefakefakefakefakefakefakefakefake --write",
+                  "name": "aurproxy_sync"
+               }
+            ],
+            "resources": {
+               "cpu": 0.10000000000000001,
+               "disk": 1073741824,
+               "ram": 134217728
+            }
+         }
+      }
+   ]
+}
