@@ -19,3 +19,5 @@ What's in here:
 Alongside each of the files that actually produces a job or jobs there should also be a `generated.<name>.json` file containing the result of jsonnet evaluating `<name>.json`.  Normally you would not check these in, but they are here for the sake of demonstration.
 
 This stuff is still evolving, and the aurproxy example currently needs a patched version of aurora.pex that understands json files with a `{ "jobs": [job1, job2, ...] }` structure.
+
+My patch to enable aurora.pex to directly handle jsonnet files and multi-job json ddocuments can be found here, if you really want to try it: https://github.com/apache/aurora/compare/master...benley:jsonnet-client
