@@ -7,4 +7,4 @@ demoproxy {
   environment: "devel",
   role: "vagrant",
   instances: 1
-};
+}
