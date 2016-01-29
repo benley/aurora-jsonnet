@@ -1,0 +1,179 @@
+{%- set sandbox = context.sandbox or "/tmp/nginx" %}
+worker_processes {{ context.worker_processes or 16 }};
+pid {{ nginx_pid_path or "/var/run/nginx.pid" }};
+daemon off;
+
+events {
+  worker_connections {{ context.worker_connections or 2000 }};
+  use epoll;
+  multi_accept on;
+}
+
+worker_rlimit_nofile {{ context.worker_rlimit_nofile or 100000 }};
+
+error_log stderr;
+
+{%- if http_servers %}
+http {
+    client_body_temp_path {{sandbox}}/client_body;
+    fastcgi_temp_path     {{sandbox}}/fastcgi_temp;
+    proxy_temp_path       {{sandbox}}/proxy_temp;
+    scgi_temp_path        {{sandbox}}/scgi_temp;
+    uwsgi_temp_path       {{sandbox}}/uwsgi_temp;
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    sendfile on;
+    tcp_nopush on;
+
+    keepalive_timeout {{ context.keepalive_timeout or 65 }};
+    keepalive_requests 100000;
+    reset_timedout_connection on;
+    client_body_timeout 10;
+    client_max_body_size {{ context.client_max_body_size or "1M" }};
+    send_timeout 2;
+    tcp_nodelay on;
+
+    log_format combined_forwarded_ip '$remote_addr ($http_x_forwarded_for) - '
+                                     '$remote_user [$time_local]  '
+                                     '"$request" $status $body_bytes_sent '
+                                     '"$http_referer" "$http_user_agent" '
+                                     '"$host" $request_time '
+                                     '$upstream_response_time '
+                                     '"$upstream_addr" $msec';
+
+    access_log /dev/stdout combined_forwarded_ip;
+    error_log stderr;
+
+    gzip on;
+
+    # Strip nginx version from headers & error pages
+    server_tokens off;
+    # Override "Server" header so that server type doesn't leak.
+    more_set_headers 'Server: ';
+
+    # Set up custom error page for all possible error response codes
+    # (Allows elimination of server type information in error pages)
+    # From http://lxr.nginx.org/source/src/http/ngx_http_special_response.c
+    error_page 400 401 402 403 404 405 406 408 409 410 411 412 413 414 415 416 494 495 496 497 500 501 502 503 504 507 /aurproxy_error.html;
+
+    {%- if stats_port %}
+    server {
+        listen {{ proxy_config.stats_port }};
+        location /aurproxy_error.html {
+            internal;
+            echo "Error";
+        }
+        location /aurproxy/status {
+            stub_status on;
+            # access_log on;
+            allow 127.0.0.1;
+            deny all;
+        }
+    }
+    {%- endif %}
+
+    {%- for server in http_servers %}
+    {%- if server.context.overflow_port %}
+    server {
+        listen {{server.context.overflow_port}} default_server;
+        location /aurproxy_error.html {
+            internal;
+            echo "Error";
+        }
+        location / {
+            # access_log on;
+            return 502;
+        }
+    }
+    {%- endif %}
+
+    {%- for route in server.routes %}
+    {%- if route.endpoints %}
+    upstream {{ server.slug }}{{ route.slug }} {
+        least_conn;
+        {% for endpoint in route.endpoints %}{% if not endpoint.weight %}#{% endif %}server {{ endpoint.host }}:{{ endpoint.port }} weight={{ endpoint.weight }}; # {{ endpoint.audit.render() }}
+        {%- endfor %}
+        keepalive 512;
+    }
+    {%- endif %}
+    {%- endfor %}
+
+    server {
+        {%- for port in server.ports %}
+        listen {{ port }}{{' default_server' if server.context.default_server == True else ''}};
+        {%- endfor %}
+
+        server_name {% for host in server.hosts %}{{ host }}{% if not loop.last%} {% endif %}{% endfor %};
+
+        proxy_connect_timeout  {{ server.context.proxy_connect_timeout or 60 }};
+        proxy_send_timeout     {{ server.context.proxy_send_timeout    or 60 }};
+        proxy_read_timeout     {{ server.context.proxy_read_timeout    or 60 }};
+        send_timeout           {{ server.context.send_timeout          or 60 }};
+
+        proxy_buffer_size 64k;
+        proxy_buffers 16 16k;
+        large_client_header_buffers 8 32k;
+
+        location /aurproxy_error.html {
+            internal;
+            echo "Error";
+        }
+
+        {%- if server.healthcheck_route %}
+        location {{ server.healthcheck_route }} {
+          # access_log on;
+          return 200;
+        }
+        {%- endif %}
+
+        {%- for blacklisted_location in server.context.location_blacklist %}
+        location {{blacklisted_location}} { deny all; }
+        {%- endfor %}
+
+        proxy_http_version 1.1;
+        proxy_set_header  Host            $host;
+        proxy_set_header  X-Real-IP       $remote_addr;
+        proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header  Connection      "";
+        {%- for route in server.routes %}
+        {% for location in route.locations %}
+        location {{location}} {
+            {%- if route.endpoints %}
+            proxy_next_upstream off;
+            proxy_pass http://{{ server.slug }}{{ route.slug }};
+            {%- else %}
+            # No endpoints found for {{ server.slug }}{{ route.slug }}
+            # access_log on;
+            return {{ route.empty_endpoint_status_code }};
+            {%- endif %}
+        }
+        {%- endfor %}
+        {%- endfor %}
+    }
+    {%- endfor %}
+}
+{%- endif %}
+
+{%- if stream_servers %}
+stream {
+   {% for server in stream_servers %}
+    server {
+        {%- for port in server.ports %}
+        listen {{ port }};
+        {%- endfor %}
+        proxy_pass {{ server.slug }};
+    }
+
+    upstream {{ server.slug }} {
+        least_conn;
+        {%- for stream in server.streams %}
+        {%- for endpoint in stream.endpoints %}
+        {% if not endpoint.weight %}#{% endif %}server {{ endpoint.host }}:{{ endpoint.port }} weight={{ endpoint.weight }}; # {{ endpoint.audit.render() }}
+        {%- endfor %}
+        {%- endfor %}
+    }
+   {%- endfor %}
+}
+{%- endif %}
